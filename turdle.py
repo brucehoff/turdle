@@ -110,7 +110,10 @@ def main():
 		possible_answers = best_partition[wordle_hint]
 		if len(possible_answers)<2:
 			break
-	print(f"Possible answers: {possible_answers}.")
+	if len(possible_answers)==1:
+		print(f"The answer is: {possible_answers[0]}.")
+	else:
+		print(f"Possible answers: {possible_answers}.")
 
 if __name__ == "__main__":
     main()
