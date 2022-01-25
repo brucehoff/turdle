@@ -91,6 +91,8 @@ def main():
 	possible_answers = words
 	for i in range(0,5):
 		print(f"There are {len(possible_answers)} possible answers.")
+		if len(possible_answers)<20:
+			print(f"\t{possible_answers}")
 		# get result of user placing guess
 		if i==0:
 			best_guess = initial_guess
@@ -98,11 +100,12 @@ def main():
 			for key in initial_guess["partition"].keys():
 				best_partition[int(key)] = initial_guess["partition"][key]
 		else:
-			best_guess = optimize_guess(words, possible_answers)
+			# best_guess = optimize_guess(words, possible_answers) <<< ANY word can be a guess
+			best_guess = optimize_guess(possible_answers, possible_answers) # <<< ONLY guess a possible answer
 			best_partition = best_guess["partition"]
 		print(f"Guess {best_guess['guess']}")
 		
-		wordle_response = input("Enter wordle's response:")
+		wordle_response = input("Enter wordle's response: ")
 		wordle_hint = hint_value_from_string(wordle_response)
 		possible_answers = best_partition[wordle_hint]
 		if len(possible_answers)<2:
