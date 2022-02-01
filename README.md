@@ -10,5 +10,3 @@ is f(G) = Sum-i(g(i)/n * g(i)) = Sum-i(g^2(i))/n.  So the brute force solution i
 words.  Note that the best guess, G, might not be one of the words in L!  
 
 
-The included script, `listwords.sh` scrapes the site yougowords.com to create a file of five letter words.
-

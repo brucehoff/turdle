@@ -1,12 +1,16 @@
 import os, re, json
 from os.path import exists
 
-word_file = "yougowords_5letter.txt"
+WORD_FILE = "corpus.txt"
+FIRST_GUESS_FILE = "first_guess.json"
+NUM_GOOD_GUESSES = 50
+HARD_MODE = False
+MIN_EASY_MODE_POSSIBLE_ANSWER_SIZE = 3
 
 def create_list():
 	regex = re.compile('[^a-zA-Z]')
 	result = []
-	with open(word_file,'r') as file:   
+	with open(WORD_FILE,'r') as file:   
 		for line in file:       
 			for word in line.split():       
 				# to lower case
@@ -18,9 +22,7 @@ def create_list():
 				if len(word)==5:
 					result.append(word)
 	return set(result) # eliminate duplicates
-	
-	
-	
+
 def get_hint(guess, target):
 	return hint_value_from_string(get_hint_as_string(guess, target))
 	
@@ -91,10 +93,13 @@ def rank_partition(partition):
 		result = result + n*n
 		total = total + n
 	return result/total
-	
-NUM_GOOD_GUESSES = 5
 
 def optimize_guess(possible_guesses, possible_answers):
+	# If the number of possible answers is small, don't use 'easy mode', in which a guess
+	# can be outside the list of possible answers.  Just use 'hard mode', i.e., only guess
+	# one of the possible answers
+	if len(possible_guesses) > len(possible_answers) and len(possible_answers)<MIN_EASY_MODE_POSSIBLE_ANSWER_SIZE:
+		possible_guesses = possible_answers
 	result = [] # a list of dict's with keys, 'rank', 'guess', 'partition'
 	for guess in possible_guesses:
 		partition_for_guess = partition(guess, possible_answers)
@@ -103,7 +108,7 @@ def optimize_guess(possible_guesses, possible_answers):
 		#print(f"Guess {guess} has rank {guess_rank}")
 		inserted=False
 		for i in range(0, len(result)):
-			if guess_rank < result[i]['rank']:
+			if guess_rank < result[i]['rank'] or (guess_rank == result[i]['rank'] and guess in possible_answers):
 				result.insert(i,guess_entry)
 				inserted=True
 				result = result[0:NUM_GOOD_GUESSES]
@@ -113,25 +118,25 @@ def optimize_guess(possible_guesses, possible_answers):
 			
 	return result
 	
-FIRST_GUESS_FILE = "first_guess.json"
-
-def rank_all_words():
-	words = create_list()
-	initial_guesses = read_initial_guess_file()
+def rank_all_words(words, initial_guesses):
 	stats = {}
 	target_counter = 0
 	for target in words:
 		guesses = []
 		possible_answers = words
 		guess_counter = 0
-		while guess_counter < 10:
+		while guess_counter < 100:
 			if guess_counter==0:
 				best_guesses = initial_guesses
 			else:
-				best_guesses = optimize_guess(words, possible_answers)
+				if HARD_MODE:
+					best_guesses = optimize_guess(possible_answers, possible_answers)
+				else:
+					best_guesses = optimize_guess(words, possible_answers)
 			best_guess = best_guesses[0] # just pick the top guess
 			wordle_hint = get_hint(best_guess['guess'], target)
-			possible_answers = best_guess['partition'][wordle_hint]
+			best_partition = best_guess['partition']
+			possible_answers = best_partition[wordle_hint]
 			guess_counter = guess_counter + 1
 			guesses.append(best_guess['guess'])
 			if best_guess['guess']==target:
@@ -154,18 +159,25 @@ def read_initial_guess_file():
 			initial_guess["partition"] = best_partition
 	return initial_guesses
 
+
 def main():
-	if False: # rank all words
-		rank_all_words()
-		return 0
-	# interactive application
+	if HARD_MODE:
+		print("Using HARD mode.")
+	else:
+		print("Using EASY mode.")
 	words = create_list()
 	if not exists(FIRST_GUESS_FILE):
 		best_guesses = optimize_guess(words, words)
 		with open(FIRST_GUESS_FILE, "w") as outfile:
 			json.dump(best_guesses, outfile)
 	initial_guesses = read_initial_guess_file()
-			
+
+	if False: # rank all words
+		rank_all_words(words, initial_guesses)
+		return 0
+		
+		
+	# interactive application
 	possible_answers = words
 	for i in range(0,5):
 		print(f"There are {len(possible_answers)} possible answers.")
@@ -175,12 +187,18 @@ def main():
 		if i==0:
 			best_guesses = initial_guesses
 		else:
-			# best_guess = optimize_guess(words, possible_answers) <<< ANY word can be a guess
-			best_guesses = optimize_guess(possible_answers, possible_answers) # <<< ONLY guess a possible answer
+			if HARD_MODE:
+				best_guesses = optimize_guess(possible_answers, possible_answers) # <<< ONLY guess a possible answer
+			else:
+				best_guesses = optimize_guess(words, possible_answers) # <<< ANY word can be a guess
 		
 		print(f"\nTop guesses: ", end='')
 		for guess in best_guesses:
-			print(guess['guess'], end=' ')
+			if guess['guess'] in possible_answers:
+				print(f"{guess['guess'].upper()} ({guess['rank']:.1f})", end=' ')
+			else:
+				print(f"{guess['guess']} ({guess['rank']:.1f})", end=' ')
+			
 		print('')
 		chosen_guess = input("Enter your guess: ")
 		best_partition = None
