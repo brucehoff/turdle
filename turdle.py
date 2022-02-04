@@ -5,7 +5,7 @@ WORD_FILE = "corpus.txt"
 FIRST_GUESS_FILE = "first_guess.json"
 NUM_GOOD_GUESSES = 50
 HARD_MODE = False
-MIN_EASY_MODE_POSSIBLE_ANSWER_SIZE = 3
+MIN_EASY_MODE_POSSIBLE_ANSWER_SIZE = 3 # normally 3 but setting to 0 disables the feature
 
 def create_list():
 	regex = re.compile('[^a-zA-Z]')

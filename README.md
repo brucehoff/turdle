@@ -2,11 +2,59 @@
 Aid for solving Wordle
 
 ### How to Solve Wordle
-Given a list of words, L, a guess, G, subdivides the words into sets based on the possible results of the guess.
-Each guess results in a row of five squares, each grey (no match), yellow (match in another position) or green (match in the guessed position).
-Therefore there are 3^5 = 243 groups of words for each guess.  The goal is to select a guess, G, such that the expected size
-is minimized.   If the total number of words is n and the size of each group, g, is g(i), i=1->243, then the quantity to minimize
-is f(G) = Sum-i(g(i)/n * g(i)) = Sum-i(g^2(i))/n.  So the brute force solution is to compute f(G) for each word in the list of possible
-words.  Note that the best guess, G, might not be one of the words in L!  
+
+W is the set of words that could be the hidden answer.
+
+G is the set of words you can guess. (G might include words not in W.)
+
+h(g, w) is the hint that Wordle returns when you guess g but the answer is really w.  
+
+A partition of a set is a collection of disjoint subsets of the set, where every element
+of the original set is in one of he subsets.  
+
+The partition p(g, W)={p1,p2,..} is a partition of W in which all words in a subset, pi, have the same hint
+when g is guessed and no words in different subsets have the same hint, i.e.:
+for all wj,wk in pi, h(g,wj)=h(g,wk).  Further if wj is in pi and wk is not in pi then
+h(g,wj)!=h(g,wk).
+
+If the set of possible words is W, the hidden word is w, and the guess is g, then the 
+hint returned when g is guessed reduces the set of possible words to pw, where pw is 
+the subset in the partition p(g,W) which contains w.
+
+Clearly it's good for pw to be as small as possible. Turdle's strategy is to pick a guess
+g such that the "expected value" of pw is as small as possible.  Given a guess g, the expected
+value of pw is:
+
+	E[pw] = Sumi (|pi|*P(pi,g))
+I.e., the expected size of pw is the sum, over all subsets pi of the partition p generated, 
+for guess g of the size of pi (|pi|) times the probability that pi is the subset indicated 
+by the returned hint.
+
+Note that P(pi,g) is simply the probability that the hidden word, w, is in pi and that, in turn,
+is determined by its size, i.e.:
+
+	P(pi,g) = |pi|/W
+So
+
+	E[pw] = Sumi (|pi|*|pi|/W)
+or
+
+	E[pw] = Sumi (|pi|^2) / W
+The best guess, g, then is the guess whose value for E[pw] is the minimum. 
+
+Note that optimal guesses most evenly split a set of possible words into even sized subsets. For example say |W| is 9 and one guess separates into three groups of size:
+
+	1, 1, 7
+while another guess evenly divides the list into three equally sized groups:
+
+	3, 3, 3
+	
+The value of E[pw] for the first guess is (1+1+49)/9 = 5.7
+
+The value of E[pw] for the second guess is (9+9+9)/9 = 3
+
+  
+
+Note that the best guess, G, might not be one of the words in L!  If W = {shard,shark,sharp} then g='adept' will tell you immediately which of the three words is correct, while guessing any of the words in W will most likely reduce the list of possibilities to two.
 
 
