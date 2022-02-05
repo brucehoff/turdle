@@ -22,12 +22,12 @@ hint returned when g is guessed reduces the set of possible words to pw, where p
 the subset in the partition p(g,W) which contains w.
 
 Clearly it's good for pw to be as small as possible. Turdle's strategy is to pick a guess
-g such that the "expected value" of pw is as small as possible.  Given a guess g, the expected
+g such that the "expected value" of pw, `E[pw]` is as small as possible.  Given a guess g, the expected
 value of pw is:
 
 	E[pw] = Sumi (|pi|*P(pi,g))
-I.e., the expected size of pw is the sum, over all subsets pi of the partition p generated, 
-for guess g of the size of pi (|pi|) times the probability that pi is the subset indicated 
+I.e., the expected size of pw is the sum, over all subsets pi of the partition p generated 
+for guess g, of the size of pi (|pi|) times the probability that pi is the subset indicated 
 by the returned hint.
 
 Note that P(pi,g) is simply the probability that the hidden word, w, is in pi and that, in turn,
@@ -42,7 +42,7 @@ or
 	E[pw] = Sumi (|pi|^2) / W
 The best guess, g, then is the guess whose value for E[pw] is the minimum. 
 
-Note that optimal guesses most evenly split a set of possible words into even sized subsets. For example say |W| is 9 and one guess separates into three groups of size:
+Note that optimal guesses most evenly partition a set of possible words into even sized subsets. For example say |W| is 9 and one guess separates into three groups of size:
 
 	1, 1, 7
 while another guess evenly divides the list into three equally sized groups:
@@ -55,6 +55,6 @@ The value of E[pw] for the second guess is (9+9+9)/9 = 3
 
   
 
-Note that the best guess, G, might not be one of the words in L!  If W = {shard,shark,sharp} then g='adept' will tell you immediately which of the three words is correct, while guessing any of the words in W will most likely reduce the list of possibilities to two.
+Note that the best guess, g, might not be one of the words in L!  If W = {'shard','shark','sharp'} then g='adept' will tell you immediately which of the three words is correct, while guessing any of the words in W will most likely reduce the list of possibilities to two.
 
 
