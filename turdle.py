@@ -1,11 +1,12 @@
 import os, re, json
 from os.path import exists
+from math import log2
 
 WORD_FILE = "corpus.txt"
 FIRST_GUESS_FILE = "first_guess.json"
 NUM_GOOD_GUESSES = 50
 HARD_MODE = False
-MIN_EASY_MODE_POSSIBLE_ANSWER_SIZE = 3 # normally 3 but setting to 0 disables the feature
+MIN_EASY_MODE_POSSIBLE_ANSWER_SIZE = 0 # normally 3 but setting to 0 disables the feature
 
 def create_list():
 	regex = re.compile('[^a-zA-Z]')
@@ -62,6 +63,8 @@ def get_hint_as_string(guess, target):
 		
 # '--yg-' -> 1*9+2*3 = 15
 def hint_value_from_string(s):
+	if len(s)!=5:
+		raise Exception("Hint must have length five")
 	multiplier = 3
 	result = 0
 	for i in range(0,len(s)):
@@ -70,6 +73,8 @@ def hint_value_from_string(s):
 			result = result + 2 # green
 		elif s[i]=='y':
 			result = result + 1 # yellow
+		elif s[i]!='-':
+			raise Exception("Hint must cntsin only '-', 'y', 'g'")
 		# else grey
 	return result
 	
@@ -85,13 +90,28 @@ def partition(guess, possible_answers):
 		partition[hint]=hint_set
 	return partition
 
+#
+# Original rank is the average size of the resultant list after
+# the hint is returned
+#
+# This video (https://www.youtube.com/watch?v=v68zYyaEmEA) suggests
+# maximizing information/entropy which means minimizing the expected
+# log(partition size)
+#
+#
+#
 def rank_partition(partition):
 	result = 0
 	total = 0
 	for value in partition.values():
 		n = len(value)
-		result = result + n*n
 		total = total + n
+	for value in partition.values():
+		n = len(value)
+		# original:
+		# result = result + n*n
+		# information theoretic:
+		result = result + n*log2(n/total)
 	return result/total
 
 def optimize_guess(possible_guesses, possible_answers):
@@ -177,11 +197,18 @@ def main():
 		return 0
 		
 		
+	# hint = "--yy-"
+	# print(f"value for {hint} {hint_value_from_string(hint)}")
+	#guess = "crowd"
+	#target = "aroma"
+	#print(f"Hint for guess {guess} and target {target}: {get_hint_as_string(guess, target)}")
+	#return 0
+		
 	# interactive application
 	possible_answers = words
 	for i in range(0,5):
 		print(f"There are {len(possible_answers)} possible answers.")
-		if len(possible_answers)<20:
+		if len(possible_answers)<100:
 			print(f"\t{possible_answers}")
 		# get result of user placing guess
 		if i==0:
@@ -210,7 +237,11 @@ def main():
 				
 		wordle_response = input("Enter wordle's response (5 chars of 'g', 'y', or '-'): ")
 		wordle_hint = hint_value_from_string(wordle_response)
-		possible_answers = best_partition[wordle_hint]
+		try:
+			possible_answers = best_partition[wordle_hint]
+		except Exception as e:
+			print(best_partition)
+			raise(e)
 		if len(possible_answers)<2:
 			break
 	if len(possible_answers)==1:
