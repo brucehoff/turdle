@@ -239,7 +239,18 @@ def best_multi_guess(word_set):
 				best_guesses = guesses
 				print(f'Best guesses: {best_guesses}, rank={best_rank}')
 				
-				
+def best_third_guess(word_set):
+	best_rank = None
+	
+	words = list(word_set)
+	for i in range(0, len(words)):
+		guesses = ['salon', 'trice', words[i]]
+		partition = partition_from_multiple_guesses(guesses, words)
+		rank = rank_partition(partition)
+		if best_rank is None or rank<best_rank:
+			best_rank=rank
+			best_guesses = guesses
+			print(f'Best guesses: {best_guesses}, rank={best_rank}')
 				
 def rank_select_word_pairs(word_set):
 	words = list(word_set)
@@ -283,15 +294,19 @@ def main():
 		rank_all_words(words, initial_guesses)
 		return 0
 		
-	if False: # rank all words
+	if False:
 		best_second_guess(words, initial_guesses)
 		return 0
 		
-	if False: # rank all words
+	if False:
 		best_multi_guess(words)
 		return 0
 		
-	if False: # rank all words
+	if False:
+		best_third_guess(words)
+		return 0
+		
+	if False:
 		rank_select_word_pairs(words)
 		return 0
 		
